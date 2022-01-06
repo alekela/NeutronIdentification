@@ -1,26 +1,60 @@
 from prepare_data import Data
 from neural_network import OurNeuralNetwork
+import time
 
-"""inputdata = Data('data_w_source.txt', "class_labels.txt")
+inputdata = Data('data_w_source.txt', "class_labels.txt")
+
 data = inputdata.get_data()
-answers = inputdata.get_answers()"""
+answers = inputdata.get_answers()
 
-data = [[-2, -1], [25, 6], [17, 4], [-15, -6]]
-answers = [0, 1, 1, 0]
+for i in range(len(data)):
+    tmp = data[i].index(max(data[i]))
+    data[i] = data[i][tmp - 50: tmp + 450]
 
-# создание нейронки
-network = OurNeuralNetwork(3, 2, 2, 1)
+start_time = time.time()
 
-# при самом первом запуске нейронки создать файл weights.txt и запустить эту строку
-# network.create_new_weights()
+network = OurNeuralNetwork(3, 500, 25, 1)
 
-network.train(data, answers)
 
-with open("weights.txt", "w") as f:
-    for i in network.weights:
-        for j in i:
-            f.write(" ".join(map(str, j)) + "\n")
-        f.write("__\n")
+def training():
+    network.train(data, answers)
+    with open("weights.txt", "w") as f:
+        for i in network.weights:
+            for j in i:
+                f.write(" ".join(map(str, j)) + "\n")
+            f.write("__\n")
 
-for i in data:
-    print(network.feedforward(i))
+    with open("biases.txt", "w") as f:
+        for i in network.layers:
+            s = []
+            for j in i.neurons:
+                s.append(j.bias)
+            f.write(" ".join(map(str, s)) + "\n")
+    print("Тренировка окончена")
+
+
+def practic():
+    prac_anss = []
+    for i in range(len(data)):
+        tmp = network.feedforward(data[i])
+        prac_anss.append(round(tmp))
+    right = 0
+    lie_0 = 0
+    lie_1 = 0
+
+    for i in range(len(answers)):
+
+        if prac_anss[i] == answers[i]:
+            right += 1
+        elif prac_anss[i] == 1 and answers[i] == 0:
+            lie_1 += 1
+        elif prac_anss[i] == 0 and answers[i] == 1:
+            lie_0 += 1
+
+    print("Нейронная сеть работала: %.2f секунд" % (time.time() - start_time))
+    print(f"Процент ошибки: {right / len(prac_anss) * 100} %")
+    print(f"Ложные нули: {lie_0}, {lie_0 / len(prac_anss) * 100} %")
+    print(f"Ложные единицы: {lie_1}, {lie_1 / len(prac_anss) * 100} %")
+
+
+practic()
